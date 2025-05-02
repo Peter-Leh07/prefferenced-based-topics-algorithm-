@@ -30,88 +30,95 @@ const students = [
     },
     {
       name: "Cyril",
-      preferences: [
-        "Blockchain vo verejnej správe",
-        "Analýza sentimentu v sociálnych médiách",
-        "Etické dilemy autonómnych vozidiel"
-      ],
+      preferences: ["Analýza sentimentu v sociálnych médiách"],
       submittedAt: "2025-04-30T08:20:13Z"
     },
     {
       name: "Dominika",
       preferences: [
         "Umelá inteligencia v zdravotníctve",
-        "Etické dilemy autonómnych vozidiel",
-        "Blockchain vo verejnej správe"
+        "Etické dilemy autonómnych vozidiel"
       ],
       submittedAt: "2025-04-30T08:23:05Z"
     },
     {
       name: "Eva",
       preferences: [
-        "Analýza sentimentu v sociálnych médiách",
         "Etické dilemy autonómnych vozidiel",
-        "Umelá inteligencia v zdravotníctve"
+        "Blockchain vo verejnej správe"
       ],
       submittedAt: "2025-04-30T08:26:10Z"
     },
     {
       name: "Filip",
       preferences: [
-        "Etické dilemy autonómnych vozidiel",
-        "Blockchain vo verejnej správe",
-        "Umelá inteligencia v zdravotníctve"
+        "Analýza sentimentu v sociálnych médiách",
+        "Blockchain vo verejnej správe"
       ],
       submittedAt: "2025-04-30T08:29:44Z"
     },
     {
       name: "Gabriela",
-      preferences: [
-        "Blockchain vo verejnej správe",
-        "Umelá inteligencia v zdravotníctve",
-        "Analýza sentimentu v sociálnych médiách"
-      ],
+      preferences: ["Umelá inteligencia v zdravotníctve"],
       submittedAt: "2025-04-30T08:32:11Z"
-    },
-    {
-      name: "Henrich",
-      preferences: [
-        "Analýza sentimentu v sociálnych médiách",
-        "Umelá inteligencia v zdravotníctve",
-        "Blockchain vo verejnej správe"
-      ],
-      submittedAt: "2025-04-30T08:34:55Z"
     }
   ];
+  
   const topics = {
-    "Umelá inteligencia v zdravotníctve": { "capacity": 2 , "students": []},
-    "Etické dilemy autonómnych vozidiel": { "capacity": 2, "students": []},
-    "Blockchain vo verejnej správe": { "capacity": 2, "students": []},
-    "Analýza sentimentu v sociálnych médiách": { "capacity": 2, "students": [] }
-  }
-
+    "Umelá inteligencia v zdravotníctve": { capacity: 3, students: [] },
+    "Etické dilemy autonómnych vozidiel": { capacity: 1, students: [] },
+    "Blockchain vo verejnej správe": { capacity: 2, students: [] },
+    "Analýza sentimentu v sociálnych médiách": { capacity: 1, students: [] }
+  };
+  
+  const studentsWithoutTopic = [];
+  
   const getOrderBySubmittedTime = (someStudents) => {
-    return someStudents.sort((a , b) => {new Date(a.submittedAt) - new Date(b.submittedAt)})
-  }
-
-  const getTopicForStudents = (someStudents , someTopics) => {
-        let studentsForFilter = [...someStudents];
-        let studentsForIteration = [...someStudents];
-        for(let i = 0; i < 3 ; i++){
-        studentsForIteration.forEach(student => {
-            const  topicKey = student.preferences[i]
-                if(someTopics[topicKey].capacity > 0){
-                    someTopics[topicKey].students.push(student.name)
-                    someTopics[topicKey].capacity--;
-                    student.assignedTopic = topicKey;
-                    studentsForFilter = studentsForFilter.filter(s => s.name !== student.name)
-                }
-            });
-            studentsForIteration = studentsForFilter
+    return someStudents.sort(
+      (a, b) => new Date(a.submittedAt) - new Date(b.submittedAt)
+    );
+  };
+  
+  const getTopicForStudents = (someStudents, someTopics) => {
+    let studentsForFilter = [...someStudents];
+    let studentsForIteration = [...someStudents];
+    for (let i = 0; i < 3; i++) {
+      studentsForIteration.forEach((student) => {
+        if (i >= student.preferences.length) return;
+        const topicKey = student.preferences[i];
+        if (!someTopics[topicKey]) return;
+        if (someTopics[topicKey].capacity > 0) {
+          someTopics[topicKey].students.push(student.name);
+          someTopics[topicKey].capacity--;
+          student.assignedTopic = topicKey;
+          studentsForFilter = studentsForFilter.filter(
+            (s) => s.name !== student.name
+          );
+        } else if (i === student.preferences.length - 1) {
+          studentsWithoutTopic.push(student);
         }
-        console.log(students)
-        console.log(topics)
-  }
+      });
+      studentsForIteration = studentsForFilter;
+    }
+  };
+  
+  const getTopicForOthers = (someTopics, someStudentsWithoutTopic) => {
+    for (const topicKey in someTopics) {
+      const topic = someTopics[topicKey];
+      while (topic.capacity > 0 && someStudentsWithoutTopic.length > 0) {
+        const student = someStudentsWithoutTopic.shift();
+        topic.students.push(student.name);
+        topic.capacity--;
+        student.assignedTopic = topicKey;
+      }
+    }
+  };
+  const topicPrefferenceAlgorithm = () => {
+    const orderedStudents =  getOrderBySubmittedTime(students)
+    getTopicForStudents(orderedStudents , topics)
+    getTopicForOthers(topics , students , studentsWithoutTopic)
+    console.log(students ,topics)
+}
+ 
 
- const orderedStudents =  getOrderBySubmittedTime(students)
-getTopicForStudents(orderedStudents , topics)
+export default topicPrefferenceAlgorithm();
